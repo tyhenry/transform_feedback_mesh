@@ -38,7 +38,13 @@ void ofApp::setup()
 	}
 	vbo.setTexCoordData( texCoords.data(), nVerts, GL_STATIC_DRAW );	// set these directly on our vbo mesh, they won't change
 
-	// todo: vbo.setIndexData()
+
+	// setup tex coord visualization shader
+	uvVisShader.setupShaderFromSource( GL_VERTEX_SHADER, uvVisVertShader );
+	uvVisShader.setupShaderFromSource( GL_FRAGMENT_SHADER, uvVisFragShader );
+	uvVisShader.bindDefaults();	// binds default oF programmable renderer attributes (position, color, normal, texcoord)
+	uvVisShader.linkProgram();
+
 }
 
 //--------------------------------------------------------------
@@ -65,8 +71,11 @@ void ofApp::draw()
 	cam.begin();
 	ofEnableDepthTest();
 	ofPushStyle();
-	ofSetColor( 100 );
+	
+	uvVisShader.begin();
 	vbo.draw( GL_POINTS, 0, vbo.getNumVertices() );
+	uvVisShader.end();
+
 	ofPopStyle();
 	ofDrawAxis( 100 );
 	ofDisableDepthTest();
