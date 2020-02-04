@@ -10,8 +10,9 @@ void ofApp::setup()
 	// Load transform feedback shader.
 	ofShader::TransformFeedbackSettings settings;
 	settings.shaderFiles[GL_VERTEX_SHADER] = ofToDataPath( "transformShader.vert", true );
-	settings.bindDefaults                  = false;
-	settings.varyingsToCapture             = { "vPosition" };  // vPosition = vec3 (could also capture "vTexCoord" but tex coords should be static)
+	//settings.shaderFiles[GL_GEOMETRY_SHADER] = ofToDataPath( "transformShader.geom", true );
+	settings.bindDefaults      = false;
+	settings.varyingsToCapture = { "vPosition" };  // vPosition = vec3 (could also capture "vTexCoord" but tex coords should be static)
 	//settings.bufferMode                    = GL_SEPARATE_ATTRIBS;		// either GL_INTERLEAVED_ATTRIBS or GL_SEPARATE_ATTRIBS: choose memory layout of captured attributes (ABABAB vs. AAABBB)
 	if ( !transformShader.setup( settings ) ) {
 		ofLogError( "ofApp" ) << "Error loading transformShader.vert!";
@@ -36,15 +37,15 @@ void ofApp::setup()
 			texCoords[i] /= glm::vec2( vboDims );  // normalized coords
 		}
 	}
-	vbo.setTexCoordData( texCoords.data(), nVerts, GL_STATIC_DRAW );	// set these directly on our vbo mesh, they won't change
-
+	vbo.setTexCoordData( texCoords.data(), nVerts, GL_STATIC_DRAW );  // set these directly on our vbo mesh, they won't change
+	auto mesh = ofMesh::plane(0, 0, vboDims.x, vboDims.y, OF_PRIMITIVE_TRIANGLES);
+	vbo.setIndexData( mesh.getIndices().data(), mesh.getNumIndices(), GL_STREAM_DRAW);
 
 	// setup tex coord visualization shader
 	uvVisShader.setupShaderFromSource( GL_VERTEX_SHADER, uvVisVertShader );
 	uvVisShader.setupShaderFromSource( GL_FRAGMENT_SHADER, uvVisFragShader );
-	uvVisShader.bindDefaults();	// binds default oF programmable renderer attributes (position, color, normal, texcoord)
+	uvVisShader.bindDefaults();  // binds default oF programmable renderer attributes (position, color, normal, texcoord)
 	uvVisShader.linkProgram();
-
 }
 
 //--------------------------------------------------------------
@@ -71,9 +72,10 @@ void ofApp::draw()
 	cam.begin();
 	ofEnableDepthTest();
 	ofPushStyle();
-	
+
 	uvVisShader.begin();
-	vbo.draw( GL_POINTS, 0, vbo.getNumVertices() );
+	//vbo.draw( GL_POINTS, 0, vbo.getNumVertices() );
+	vbo.drawElements( GL_TRIANGLES, vbo.getNumIndices() );
 	uvVisShader.end();
 
 	ofPopStyle();

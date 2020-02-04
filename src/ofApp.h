@@ -66,7 +66,7 @@ public:
 	ofShader transformShader;
 	ofVbo vbo, transformInputVbo;
 	ofBufferObject transformOutputBuffer;  // output capture buffer
-	glm::ivec2 vboDims = { 2048, 2048 };
+	glm::ivec2 vboDims = { 1024, 1024 };
 	ofEasyCam cam;
 
 	glm::vec3 noiseFrequency = glm::vec3(.01,.01, .1);
