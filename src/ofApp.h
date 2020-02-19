@@ -14,14 +14,15 @@ in vec2  texcoord;
 in vec4  color;
 in vec3  normal;
 
-out vec4 colorVarying;
-out vec2 texCoordVarying;
-out vec4 normalVarying;
+out vec4 vColor;
+out vec2 vTexcoord;
+out vec3 vNormal;
 
 void main()
 {
-	colorVarying = color;
-	texCoordVarying = (textureMatrix*vec4(texcoord.x,texcoord.y,0,1)).xy;
+	vColor = color;
+	vNormal = normal;
+	vTexcoord = (textureMatrix*vec4(texcoord.x,texcoord.y,0,1)).xy;
 	gl_Position = modelViewProjectionMatrix * position;
 }
 
@@ -31,14 +32,16 @@ const std::string uvVisFragShader = R"glsl(
 
 #version 150
 
-in vec4 colorVarying;
-in vec2 texCoordVarying;
-in vec4 normalVarying;
+in vec4 vColor;
+in vec2 vTexcoord;
+in vec3 vNormal;
 
 out vec4 fragColor;
 
 void main(){
-	fragColor = vec4( texCoordVarying, 0., 1. );
+	vec3 col = vec3(vTexcoord, 0.);
+	col *= dot( vec3(0,0,1), vNormal );
+	fragColor = vec4( col, 1. );
 }
 
 )glsl";
@@ -69,8 +72,8 @@ public:
 	glm::ivec2 vboDims = { 1024, 1024 };
 	ofEasyCam cam;
 
-	glm::vec3 noiseFrequency = glm::vec3(.01,.01, .1);
-	float noiseAmplitude = 100.;
+	glm::vec3 noiseFrequency = glm::vec3( .01, .001, .2 );
+	float noiseAmplitude     = 40.;
 
 	ofShader uvVisShader;
 };

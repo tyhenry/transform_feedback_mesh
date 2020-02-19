@@ -12,7 +12,7 @@ void ofApp::setup()
 	settings.shaderFiles[GL_VERTEX_SHADER] = ofToDataPath( "transformShader.vert", true );
 	//settings.shaderFiles[GL_GEOMETRY_SHADER] = ofToDataPath( "transformShader.geom", true );
 	settings.bindDefaults      = false;
-	settings.varyingsToCapture = { "vPosition" };  // vPosition = vec3 (could also capture "vTexCoord" but tex coords should be static)
+	settings.varyingsToCapture = { "vPosition", "vNormal" };  // vPosition = vec3 (could also capture "vTexCoord" but tex coords should be static)
 	//settings.bufferMode                    = GL_SEPARATE_ATTRIBS;		// either GL_INTERLEAVED_ATTRIBS or GL_SEPARATE_ATTRIBS: choose memory layout of captured attributes (ABABAB vs. AAABBB)
 	if ( !transformShader.setup( settings ) ) {
 		ofLogError( "ofApp" ) << "Error loading transformShader.vert!";
@@ -26,7 +26,8 @@ void ofApp::setup()
 	transformInputVbo.setVertexData( verts.data(), nVerts, GL_STATIC_DRAW );  // GL_STATIC_DRAW is GPU hint, not precise, see https://www.khronos.org/registry/OpenGL-Refpages/gl4/html/glBufferData.xhtml
 
 	// output capture buffer
-	size_t bufSz = nVerts * sizeof( glm::vec3 );              // allocate buffer to # bytes = number of points x size of capture attribute ("vPosition", vec3)
+	// allocate buffer to # bytes (n points x size)
+	size_t bufSz = nVerts * sizeof( glm::vec3 ) * 2;          // "vPosition", "vNormal" = vec3 * 2
 	transformOutputBuffer.allocate( bufSz, GL_STREAM_COPY );  // GL_STREAM_COPY hint: we'll copy attributes from GL and use for subsequent draw
 
 	// init vbo tex coords
@@ -38,8 +39,8 @@ void ofApp::setup()
 		}
 	}
 	vbo.setTexCoordData( texCoords.data(), nVerts, GL_STATIC_DRAW );  // set these directly on our vbo mesh, they won't change
-	auto mesh = ofMesh::plane(0, 0, vboDims.x, vboDims.y, OF_PRIMITIVE_TRIANGLES);
-	vbo.setIndexData( mesh.getIndices().data(), mesh.getNumIndices(), GL_STREAM_DRAW);
+	auto mesh = ofMesh::plane( 0, 0, vboDims.x, vboDims.y, OF_PRIMITIVE_TRIANGLES );
+	vbo.setIndexData( mesh.getIndices().data(), mesh.getNumIndices(), GL_STREAM_DRAW );
 
 	// setup tex coord visualization shader
 	uvVisShader.setupShaderFromSource( GL_VERTEX_SHADER, uvVisVertShader );
@@ -62,7 +63,9 @@ void ofApp::update()
 		transformInputVbo.draw( GL_POINTS, 0, transformInputVbo.getNumVertices() );
 	}
 	transformShader.endTransformFeedback( transformOutputBuffer );
-	vbo.setVertexBuffer( transformOutputBuffer, 3, 0, 0 );
+	auto vec3Size = sizeof( glm::vec3 );
+	vbo.setVertexBuffer( transformOutputBuffer, 3, vec3Size * 2, 0 );      // stride, offset
+	vbo.setNormalBuffer( transformOutputBuffer, vec3Size * 2, vec3Size );  // stride, offset
 }
 
 //--------------------------------------------------------------
