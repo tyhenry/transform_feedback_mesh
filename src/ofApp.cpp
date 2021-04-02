@@ -78,7 +78,7 @@ void ofApp::draw()
 
 	uvVisShader.begin();
 	//vbo.draw( GL_POINTS, 0, vbo.getNumVertices() );
-	vbo.drawElements( GL_TRIANGLES, vbo.getNumIndices() );
+	vbo.drawElements( GL_POINTS, vbo.getNumIndices() );
 	uvVisShader.end();
 
 	ofPopStyle();
